@@ -1,8 +1,10 @@
 package br.com.devdojo.model;
 
 import java.util.ArrayList;
-import static java.util.Arrays.*;
 import java.util.List;
+import java.util.Objects;
+
+import static java.util.Arrays.asList;
 
 public class Student {
 
@@ -21,7 +23,7 @@ public class Student {
     public Student() {
     }
 
-    public Student(String nome, int id) {
+    public Student(int id,String nome) {
         this(nome);
         this.id = id;
     }
@@ -44,8 +46,20 @@ public class Student {
 
     private static void studentRepository(){
         studentList = new ArrayList<>(
-                asList(new Student("Deku"),new Student("Todoroki"))
+                asList(new Student(1,"Deku"),new Student(2,"Todoroki"))
         );
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Student student = (Student) o;
+        return id == student.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
