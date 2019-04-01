@@ -37,21 +37,26 @@ public class StudentEndPoint {
         return new ResponseEntity<>(student, HttpStatus.OK);
     }
 
+    @GetMapping(path = "/findByName/{name}")
+    public ResponseEntity<?> findStudensByName(@PathVariable String name){
+        return new ResponseEntity<>(this.studentDao.findByNameIgnoreCaseContaining(name), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<?> save(@RequestBody Student student){
         this.studentDao.save(student);
-        return new ResponseEntity<>(student, HttpStatus.OK);
+        return new ResponseEntity<>(student, HttpStatus.CREATED);
     }
 
     @DeleteMapping(path = "/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id){
         this.studentDao.delete(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping
     public ResponseEntity<?> update(@RequestBody Student student){
         this.studentDao.save(student);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
