@@ -28,11 +28,6 @@ public class StudentEndPoint {
     public ResponseEntity<?> getStudentById(@PathVariable("id") Long id) {
         this.verifyStudentExists(id);
         Student student = this.studentDao.findOne(id);
-
-        if (student == null) {
-            throw new ResourceNotFoundException("Student not found for ID: " + id);
-        }
-
         return new ResponseEntity<>(student, HttpStatus.OK);
     }
 
