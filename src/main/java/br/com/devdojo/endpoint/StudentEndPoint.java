@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +32,9 @@ public class StudentEndPoint {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getStudentById(@PathVariable("id") Long id) {
+    public ResponseEntity<?> getStudentById(@PathVariable("id") Long id,
+                                            @AuthenticationPrincipal UserDetails userDetails) {
+
         this.verifyStudentExists(id);
         Student student = this.studentDao.findOne(id);
         return new ResponseEntity<>(student, HttpStatus.OK);
@@ -47,17 +52,18 @@ public class StudentEndPoint {
          return new ResponseEntity<>(student, HttpStatus.CREATED);
     }
 
-    @DeleteMapping(path = "/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        this.verifyStudentExists(id);
-        this.studentDao.delete(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
     @PutMapping
     public ResponseEntity<?> update(@RequestBody Student student) {
         this.verifyStudentExists(student.getId());
         this.studentDao.save(student);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping(path = "/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        this.verifyStudentExists(id);
+        this.studentDao.delete(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
