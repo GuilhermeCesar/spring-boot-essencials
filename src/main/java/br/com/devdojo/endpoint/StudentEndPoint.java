@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("students")
+@RequestMapping("v1/")
 public class StudentEndPoint {
 
     private final StudentRepository studentDao;
@@ -26,12 +26,12 @@ public class StudentEndPoint {
         this.studentDao = studentDao;
     }
 
-    @GetMapping
+    @GetMapping(path = "protected/students")
     public ResponseEntity<?> listAll(Pageable pageable) {
         return new ResponseEntity(this.studentDao.findAll(pageable), HttpStatus.OK);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("protected/students/{id}")
     public ResponseEntity<?> getStudentById(@PathVariable("id") Long id,
                                             @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -40,27 +40,26 @@ public class StudentEndPoint {
         return new ResponseEntity<>(student, HttpStatus.OK);
     }
 
-    @GetMapping(path = "/findByName/{name}")
+    @GetMapping(path = "protected/students/findByName/{name}")
     public ResponseEntity<?> findStudensByName(@PathVariable String name) {
         return new ResponseEntity<>(this.studentDao.findByNameIgnoreCaseContaining(name), HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping(path = "admin/students")
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> save(@Valid @RequestBody Student student) {
         this.studentDao.save(student);
          return new ResponseEntity<>(student, HttpStatus.CREATED);
     }
 
-    @PutMapping
+    @PutMapping("admin/students")
     public ResponseEntity<?> update(@RequestBody Student student) {
         this.verifyStudentExists(student.getId());
         this.studentDao.save(student);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @DeleteMapping(path = "/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(path = "admin/students/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         this.verifyStudentExists(id);
         this.studentDao.delete(id);
