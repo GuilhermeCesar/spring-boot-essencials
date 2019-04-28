@@ -1,14 +1,12 @@
 package br.com.devdojo.javaclient;
 
+import br.com.devdojo.model.PageableResponse;
 import br.com.devdojo.model.Student;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class JavaSpringClientTest {
 
@@ -21,12 +19,16 @@ public class JavaSpringClientTest {
         ResponseEntity<Student> forEntity = restTemplate.getForEntity("/{id}", Student.class, 2);
         System.out.println(student);
         System.out.println(forEntity.getBody());
-        Student[] students = restTemplate.getForObject("/", Student[].class);
-        System.out.println(Arrays.toString(students));
-        ResponseEntity<List<Student>> exchange = restTemplate.exchange("/", HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<Student>>() {});
-        System.out.println(exchange.getBody());
+//        Student[] students = restTemplate.getForObject("/", Student[].class);
+//        System.out.println(Arrays.toString(students));
+//        ResponseEntity<List<Student>> exchange = restTemplate.exchange("/", HttpMethod.GET, null,
+//                new ParameterizedTypeReference<List<Student>>() {});
+//        System.out.println(exchange.getBody());
 
+        ResponseEntity<PageableResponse<Student>> exchange = restTemplate.exchange("/?sort=id,desc&sort=name,asc", HttpMethod.GET, null,
+                new ParameterizedTypeReference<PageableResponse<Student>>() {
+                });
+        System.out.println(exchange);
 
     }
 }

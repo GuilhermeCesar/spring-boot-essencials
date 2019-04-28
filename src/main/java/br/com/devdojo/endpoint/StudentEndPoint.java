@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +26,8 @@ public class StudentEndPoint {
     }
 
     @GetMapping(path = "protected/students")
-    public ResponseEntity<?> listAll() {
-        return new ResponseEntity(this.studentDao.findAll(), HttpStatus.OK);
+    public ResponseEntity<?> listAll(Pageable pageable) {
+        return new ResponseEntity(this.studentDao.findAll(pageable), HttpStatus.OK);
     }
 
     @GetMapping("protected/students/{id}")
@@ -49,7 +48,7 @@ public class StudentEndPoint {
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> save(@Valid @RequestBody Student student) {
         this.studentDao.save(student);
-         return new ResponseEntity<>(student, HttpStatus.CREATED);
+        return new ResponseEntity<>(student, HttpStatus.CREATED);
     }
 
     @PutMapping("admin/students")
@@ -66,7 +65,7 @@ public class StudentEndPoint {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    private void verifyStudentExists(Long id){
+    private void verifyStudentExists(Long id) {
         if (this.studentDao.findOne(id) == null) {
             throw new ResourceNotFoundException("Student not found for ID: " + id);
         }
