@@ -14,11 +14,11 @@ public class JavaSpringClientTest {
 
         JavaClientDao dao = new JavaClientDao();
 
-        System.out.println(dao.findById(211111L));
+//        System.out.println(dao.findById(211111L));
 //        List<Student> studentList = dao.listAll();
 //        System.out.println(studentList);
 //        System.out.println(dao.save(studentPost));
 //        dao.update(studentPost);
-//        dao.delete(1L);
+        dao.delete(1100L);
     }
 }
