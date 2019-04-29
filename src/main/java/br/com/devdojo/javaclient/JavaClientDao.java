@@ -4,7 +4,11 @@ import br.com.devdojo.model.PageableResponse;
 import br.com.devdojo.model.Student;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -13,13 +17,12 @@ public class JavaClientDao {
 
     private RestTemplate restTemplate = new RestTemplateBuilder()
             .rootUri("http://localhost:8080/v1/protected/students")
-            .basicAuthorization("toyo", "devdojo").build();
+            .basicAuthorization("user", "123456").build();
 
 
     private RestTemplate restTemplateAdmin = new RestTemplateBuilder()
             .rootUri("http://localhost:8080/v1/admin/students")
-            .basicAuthorization("toyo", "devdojo").build();
-
+            .basicAuthorization("admin ", "123456").build();
 
     public Student findById(Long id) {
         return restTemplate.getForObject("/{id}", Student.class, id);
@@ -38,6 +41,14 @@ public class JavaClientDao {
                 exchange("/", HttpMethod.POST, new HttpEntity<>(student, createJsonHeader()), Student.class);
 
         return exchangePost.getBody();
+    }
+
+    public void update(Student student) {
+        restTemplateAdmin.put("/", student);
+    }
+
+    public void delete(Long id) {
+        restTemplateAdmin.delete("/{id}", id);
     }
 
     private static HttpHeaders createJsonHeader() {
