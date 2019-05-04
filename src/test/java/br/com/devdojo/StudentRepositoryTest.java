@@ -22,7 +22,7 @@ import java.util.List;
 public class StudentRepositoryTest {
 
     @Autowired
-    private StudentRepository studentRepository;
+    private StudentRepository studentDao;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -30,7 +30,7 @@ public class StudentRepositoryTest {
     @Test
     public void createSholudPersistData() {
         Student student = new Student("guilherme+cesar", "guilherme.cesar@guiherme.me");
-        this.studentRepository.save(student);
+        this.studentDao.save(student);
         Assertions.assertThat(student.getId()).isNotNull();
         Assertions.assertThat(student.getName()).isEqualTo("guilherme+cesar");
         Assertions.assertThat(student.getEmail()).isEqualTo("guilherme.cesar@guiherme.me");
@@ -40,21 +40,21 @@ public class StudentRepositoryTest {
     @Test
     public void deleteShouldRemoveData() {
         Student student = new Student("guilherme+cesar", "guilherme.cesar@guiherme.me");
-        this.studentRepository.save(student);
-        this.studentRepository.delete(student);
+        studentDao.save(student);
+        studentDao.delete(student);
 
-        Assertions.assertThat(this.studentRepository.findOne(student.getId())).isNull();
+        Assertions.assertThat(studentDao.findOne(student.getId())).isNull();
     }
 
 
     @Test
     public void updateShouldChangeAndPersistData() {
         Student student = new Student("guilherme+cesar", "guilherme.cesar@guiherme.me");
-        this.studentRepository.save(student);
+        this.studentDao.save(student);
         student.setName("guilherme cesar 2");
         student.setEmail("guilherme@guilherme.me");
-        this.studentRepository.save(student);
-        student = this.studentRepository.findOne(student.getId());
+        this.studentDao.save(student);
+        student = this.studentDao.findOne(student.getId());
         Assertions.assertThat(student.getName()).isEqualTo("guilherme cesar 2");
         Assertions.assertThat(student.getEmail()).isEqualTo("guilherme@guilherme.me");
     }
@@ -63,10 +63,10 @@ public class StudentRepositoryTest {
     public void findByNameIgnoreCaseContainingShouldIgnoreCase() {
         Student student = new Student("GUILHERME1", "guilherme.cesar@guiherme.me");
         Student student2 = new Student("guilherme2", "guilherme@guiherme.me");
-        this.studentRepository.save(student);
-        this.studentRepository.save(student2);
+        this.studentDao.save(student);
+        this.studentDao.save(student2);
 
-        List<Student> students = this.studentRepository.findByNameIgnoreCaseContaining("GUILHERME");
+        List<Student> students = this.studentDao.findByNameIgnoreCaseContaining("GUILHERME");
 
         Assertions.assertThat(students.size()).isEqualTo(2);
     }
@@ -75,7 +75,7 @@ public class StudentRepositoryTest {
     public void createWhenNameIsNullShouldThrowConstraintViolationException(){
         thrown.expect(ConstraintViolationException.class);
         thrown.expectMessage("O campo nome do estudante é obrigatório");
-        Student student = this.studentRepository.save(new Student());
+        Student student = this.studentDao.save(new Student());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class StudentRepositoryTest {
         thrown.expect(ConstraintViolationException.class);
         Student student = new Student();
         student.setName("Guilherme césar");
-        this.studentRepository.save(student);
+        studentDao.save(student);
     }
 
     @Test
@@ -93,6 +93,6 @@ public class StudentRepositoryTest {
         Student student = new Student();
         student.setName("Guilherme");
         student.setEmail("guilherme.a");
-        this.studentRepository.save(student);
+        studentDao.save(student);
     }
 }

@@ -18,7 +18,7 @@ import javax.validation.Valid;
 @RequestMapping("v1/")
 public class StudentEndPoint {
 
-    private final StudentRepository studentDao;
+    private StudentRepository studentDao;
 
     @Autowired
     public StudentEndPoint(StudentRepository studentDao) {
@@ -27,7 +27,8 @@ public class StudentEndPoint {
 
     @GetMapping(path = "protected/students")
     public ResponseEntity<?> listAll(Pageable pageable) {
-        return new ResponseEntity(this.studentDao.findAll(pageable), HttpStatus.OK);
+        System.out.println(studentDao.findAll());
+        return new ResponseEntity(studentDao.findAll(pageable), HttpStatus.OK);
     }
 
     @GetMapping("protected/students/{id}")

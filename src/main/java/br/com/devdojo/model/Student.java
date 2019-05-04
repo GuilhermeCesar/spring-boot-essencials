@@ -24,6 +24,12 @@ public class Student extends AbstractEntity {
         this.email = email;
     }
 
+    public Student(Long id, String name, String email) {
+        this(name, email);
+        this.id = id;
+    }
+
+
     public String getName() {
         return name;
     }
@@ -40,11 +46,4 @@ public class Student extends AbstractEntity {
         this.email = email;
     }
 
-    @Override
-    public String toString() {
-        return "Student{" +
-                "name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                '}';
-    }
 }
