@@ -3,6 +3,7 @@ package br.com.devdojo;
 import br.com.devdojo.model.Student;
 import br.com.devdojo.repository.StudentRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -15,13 +16,18 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static org.springframework.http.HttpMethod.DELETE;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -48,6 +54,14 @@ public class StudentEndpointTest {
             return new RestTemplateBuilder()
                     .basicAuthorization("toyo", "devdojo");
         }
+    }
+
+    @Before
+    public void setup(){
+        Student student = new Student(1L, "Legolas", "legolas@lotr.com");
+
+        BDDMockito.when(studentRepository.findOne(student.getId()))
+                .thenReturn(student);
     }
 
     @Test
@@ -86,14 +100,9 @@ public class StudentEndpointTest {
 
     @Test
     public void getStudentByIdWhenUsernameAndPasswordAreCorrectShouldReturnStatusCode200() {
-        Student student = new Student(1L, "Legolas", "legolas@lotr.com");
-
-        BDDMockito.when(studentRepository.findOne(student.getId()))
-                .thenReturn(student);
-
         ResponseEntity<Student> response =
                 restTemplate
-                        .getForEntity("/v1/protected/students/{id}", Student.class, student.getId());
+                        .getForEntity("/v1/protected/students/{id}", Student.class, 1l);
 
         Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(200);
     }
@@ -105,5 +114,59 @@ public class StudentEndpointTest {
                         .getForEntity("/v1/protected/students/{id}", Student.class, -1);
 
         Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(404);
+    }
+
+    @Test
+    public void deleteWhenUserHasRoleAdminAndStudentExistShouldStatusCode204(){
+
+
+        BDDMockito.doNothing().when(studentRepository).delete(1L);
+        ResponseEntity<String> exchange = restTemplate
+                .exchange("/v1/admin/students/{id}",
+                        DELETE, null, String.class, 1L);
+
+        Assertions.assertThat(exchange.getStatusCodeValue()).isEqualTo(204);
+    }
+
+    @Test
+    @WithMockUser(username = "xxx", password = "xxx", roles = {"USER","ADMIN"})
+    public void deleteWhenUserHasRoleAdminAndStudentDoesNotExitShouldStatusCode404() throws Exception {
+        BDDMockito.doNothing().when(studentRepository).delete(1L);
+        mockMvc.perform(
+            MockMvcRequestBuilders.delete("/v1/admin/students/{id}", -1L))
+        .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "xxx", password = "xxx", roles = {"USER"})
+    public void deleteWhenUserDoesNotHaveHasRoleAdminShouldStatusCode403() throws Exception {
+        BDDMockito.doNothing().when(studentRepository).delete(1L);
+        mockMvc.perform(
+                MockMvcRequestBuilders.delete("/v1/admin/students/{id}", -1L))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+    }
+
+    @Test
+    public void createWhenNameIsNullShouldReturnStatusCode400BadRequest() throws Exception{
+        Student student = new Student(3L, null, "sam@lotr.com");
+
+        BDDMockito.when(studentRepository.save(student))
+                .thenReturn(student);
+
+        ResponseEntity<String> response = restTemplate.postForEntity("/v1/admin/students/", student, String.class);
+        Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(400);
+        Assertions.assertThat(response.getBody()).contains("O campo nome do estudante é obrigatório");
+    }
+
+    @Test
+    public void createShouldPersistData() throws Exception{
+        Student student = new Student(3L, "Sam", "sam@lotr.com");
+
+        BDDMockito.when(studentRepository.save(student))
+                .thenReturn(student);
+
+        ResponseEntity<Student> response = restTemplate.postForEntity("/v1/admin/students/", student, Student.class);
+        Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(201);
+        Assertions.assertThat(response.getBody()).isNotNull();
     }
 }
