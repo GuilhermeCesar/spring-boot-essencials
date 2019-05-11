@@ -16,7 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -30,7 +29,7 @@ import static java.util.Arrays.asList;
 import static org.springframework.http.HttpMethod.DELETE;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class StudentEndpointTest {
 
@@ -52,12 +51,12 @@ public class StudentEndpointTest {
         @Bean
         public RestTemplateBuilder restTemplateBuilder() {
             return new RestTemplateBuilder()
-                    .basicAuthorization("toyo", "devdojo");
+                    .basicAuthorization("admin", "devdojo");
         }
     }
 
     @Before
-    public void setup(){
+    public void setup() {
         Student student = new Student(1L, "Legolas", "legolas@lotr.com");
 
         BDDMockito.when(studentRepository.findOne(student.getId()))
@@ -117,7 +116,7 @@ public class StudentEndpointTest {
     }
 
     @Test
-    public void deleteWhenUserHasRoleAdminAndStudentExistShouldStatusCode204(){
+    public void deleteWhenUserHasRoleAdminAndStudentExistShouldStatusCode204() {
 
 
         BDDMockito.doNothing().when(studentRepository).delete(1L);
@@ -129,12 +128,12 @@ public class StudentEndpointTest {
     }
 
     @Test
-    @WithMockUser(username = "xxx", password = "xxx", roles = {"USER","ADMIN"})
+    @WithMockUser(username = "xxx", password = "xxx", roles = {"USER", "ADMIN"})
     public void deleteWhenUserHasRoleAdminAndStudentDoesNotExitShouldStatusCode404() throws Exception {
         BDDMockito.doNothing().when(studentRepository).delete(1L);
         mockMvc.perform(
-            MockMvcRequestBuilders.delete("/v1/admin/students/{id}", -1L))
-        .andExpect(MockMvcResultMatchers.status().isNotFound());
+                MockMvcRequestBuilders.delete("/v1/admin/students/{id}", -1L))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -147,7 +146,7 @@ public class StudentEndpointTest {
     }
 
     @Test
-    public void createWhenNameIsNullShouldReturnStatusCode400BadRequest() throws Exception{
+    public void createWhenNameIsNullShouldReturnStatusCode400BadRequest() throws Exception {
         Student student = new Student(3L, null, "sam@lotr.com");
 
         BDDMockito.when(studentRepository.save(student))
@@ -159,7 +158,7 @@ public class StudentEndpointTest {
     }
 
     @Test
-    public void createShouldPersistData() throws Exception{
+    public void createShouldPersistData() throws Exception {
         Student student = new Student(3L, "Sam", "sam@lotr.com");
 
         BDDMockito.when(studentRepository.save(student))
