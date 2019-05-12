@@ -3,6 +3,7 @@ package br.com.devdojo.config;
 
 import br.com.devdojo.service.CustomUserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,15 +18,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private CustomUserDetailService customUserDetailService;
 
+//    @Override
+//    protected void configure(HttpSecurity http) throws Exception {
+//        http.authorizeRequests()
+//                .antMatchers("/*/protected/**").hasRole("USER")
+//                .antMatchers("/*/admin/**").hasRole("ADMIN")
+//                .and()
+//                .httpBasic()
+//                .and()
+//                .csrf().disable();
+//    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
+        http.cors().and().csrf().disable().authorizeRequests()
+                .antMatchers(HttpMethod.GET, SecurityConstants.SIGN_UP_URL).permitAll()
                 .antMatchers("/*/protected/**").hasRole("USER")
                 .antMatchers("/*/admin/**").hasRole("ADMIN")
                 .and()
-                .httpBasic()
-                .and()
-                .csrf().disable();
+                .addFilter(new JWTAuthenticationFilter(authenticationManager()))
+                .addFilter(new JWTAuthorizationFIlter(authenticationManager(), customUserDetailService));
     }
 
     @Override
