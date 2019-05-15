@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,7 @@ public class StudentEndPoint {
 
     @GetMapping("protected/students/{id}")
     public ResponseEntity<?> getStudentById(@PathVariable("id") Long id,
-                                            @AuthenticationPrincipal UserDetails userDetails) {
+                                            Authentication authentication) {
 
         this.verifyStudentExists(id);
         Student student = this.studentDao.findOne(id);
@@ -45,7 +46,7 @@ public class StudentEndPoint {
         return new ResponseEntity<>(this.studentDao.findByNameIgnoreCaseContaining(name), HttpStatus.OK);
     }
 
-    @PostMapping(path = "admin/students")
+    @PostMapping("admin/students")
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> save(@Valid @RequestBody Student student) {
         this.studentDao.save(student);
