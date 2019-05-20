@@ -36,7 +36,5 @@ public class CustomUserDetailService implements UserDetailsService {
 
         return new User(user.getUsername(), user.getPassword(),
                 user.isAdmin() ? authoritiesAdmin : authoritiesListUser);
-
-
     }
 }

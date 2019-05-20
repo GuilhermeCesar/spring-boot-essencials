@@ -19,17 +19,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private CustomUserDetailService customUserDetailService;
 
-//    @Override
-//    protected void configure(HttpSecurity http) throws Exception {
-//        http.authorizeRequests()
-//                .antMatchers("/*/protected/**").hasRole("USER")
-//                .antMatchers("/*/admin/**").hasRole("ADMIN")
-//                .and()
-//                .httpBasic()
-//                .and()
-//                .csrf().disable();
-//    }
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues())
