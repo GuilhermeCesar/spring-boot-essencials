@@ -125,6 +125,7 @@ public class StudentEndpointTokenTest {
         Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(404);
     }
 
+//    TODO parei aqui
     @Test
     public void deleteWhenUserHasRoleAdminAndStudentExistShouldStatusCode204() {
         BDDMockito.doNothing().when(studentRepository).delete(1L);
