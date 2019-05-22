@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,7 +15,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -25,8 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.springframework.http.HttpMethod.DELETE;
-import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -48,7 +45,7 @@ public class StudentEndpointTokenTest {
 
     @Before
     public void configProtectedHeaders() {
-        String str = " {\"username\": \"user\",\"password\":\"devdojo\"}";
+        String str = " {\"username\": \"Oda\",\"password\":\"devdojo\"}";
         HttpHeaders headers = restTemplate.postForEntity("/login", str, String.class).getHeaders();
         this.protectedHeader = new HttpEntity<>(headers);
     }
@@ -56,7 +53,7 @@ public class StudentEndpointTokenTest {
     @Before
     public void configAdminHeaders() {
         String str = " {\n" +
-                "                \"username\": \"admin\",\n" +
+                "                \"username\": \"toyo\",\n" +
                 "                \"password\":\"devdojo\"\n" +
                 "    }";
         HttpHeaders headers = restTemplate.postForEntity("/login", str, String.class).getHeaders();
@@ -98,19 +95,13 @@ public class StudentEndpointTokenTest {
     }
 
 
-//    TODO fazer isso pegar
     @Test
     public void getStudentByIdWhenTokenCorrectShouldReturnStatusCode200() {
-        List<Student> students = asList(
-                new Student(1L, "Legolas", "legolas@lotr.com"),
-                new Student(2L, "Aragorn", "aragorn@lotr.com")
-        );
-
-        BDDMockito.when(studentRepository.findAll())
-                .thenReturn(students);
+        BDDMockito.when(studentRepository.findOne(2L))
+                .thenReturn(new Student(2L, "Aragorn", "aragorn@lotr.com"));
         ResponseEntity<Student> response =
                 restTemplate
-                        .exchange("/v1/protected/students/1",
+                        .exchange("/v1/protected/students/2",
                                 GET, protectedHeader, Student.class);
 
         Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(200);
@@ -120,38 +111,45 @@ public class StudentEndpointTokenTest {
     public void getStudentByIdWhenTokenIsCorrectShouldReturnStatusCode404() {
         ResponseEntity<Student> response =
                 restTemplate
-                        .exchange("/v1/protected/students/{id}",GET,protectedHeader, Student.class, -1);
+                        .exchange("/v1/protected/students/{id}", GET, protectedHeader, Student.class, -1);
 
         Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(404);
     }
 
-//    TODO parei aqui
+    //    TODO parei aqui
     @Test
     public void deleteWhenUserHasRoleAdminAndStudentExistShouldStatusCode204() {
-        BDDMockito.doNothing().when(studentRepository).delete(1L);
+        BDDMockito.when(studentRepository.findOne(2l)).thenReturn(new Student(2L, "Aragorn", "aragorn@lotr.com"));
+        BDDMockito.doNothing().when(studentRepository).delete(2L);
 
         ResponseEntity<String> exchange = restTemplate
-                .exchange("/v1/admin/students/1",
-                        DELETE, adminHeader, String.class, 1L);
+                .exchange("/v1/admin/students/2",
+                        DELETE, adminHeader, String.class);
 
         Assertions.assertThat(exchange.getStatusCodeValue()).isEqualTo(204);
     }
 
     @Test
-    @WithMockUser(username = "xxx", password = "xxx", roles = {"USER", "ADMIN"})
     public void deleteWhenUserHasRoleAdminAndStudentDoesNotExitShouldStatusCode404() throws Exception {
+        String token = adminHeader.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
+
         BDDMockito.doNothing().when(studentRepository).delete(1L);
         mockMvc.perform(
-                MockMvcRequestBuilders.delete("/v1/admin/students/{id}", -1L))
+                MockMvcRequestBuilders
+                        .delete("/v1/admin/students/{id}", -1L)
+                        .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
-    @WithMockUser(username = "xxx", password = "xxx", roles = {"USER"})
     public void deleteWhenUserDoesNotHaveHasRoleAdminShouldStatusCode403() throws Exception {
+        String token = protectedHeader.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
+
         BDDMockito.doNothing().when(studentRepository).delete(1L);
         mockMvc.perform(
-                MockMvcRequestBuilders.delete("/v1/admin/students/{id}", -1L))
+                MockMvcRequestBuilders
+                        .delete("/v1/admin/students/{id}", 1L)
+                        .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
@@ -162,19 +160,30 @@ public class StudentEndpointTokenTest {
         BDDMockito.when(studentRepository.save(student))
                 .thenReturn(student);
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/v1/admin/students/", student, String.class);
+        ResponseEntity<String> response = restTemplate
+                .exchange(
+                        "/v1/admin/students/",
+                        POST,
+                        new HttpEntity<>(student, adminHeader.getHeaders()),
+                        String.class
+                );
         Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(400);
         Assertions.assertThat(response.getBody()).contains("O campo nome do estudante é obrigatório");
     }
 
     @Test
-    public void createShouldPersistData() throws Exception {
+    public void createShouldPersistDataAndReturnStatusCode200() throws Exception {
         Student student = new Student(3L, "Sam", "sam@lotr.com");
 
         BDDMockito.when(studentRepository.save(student))
                 .thenReturn(student);
 
-        ResponseEntity<Student> response = restTemplate.postForEntity("/v1/admin/students/", student, Student.class);
+        ResponseEntity<Student> response = restTemplate
+                .exchange("/v1/admin/students/",
+                        POST,
+                        new HttpEntity<>(student, adminHeader.getHeaders()),
+                        Student.class);
+
         Assertions.assertThat(response.getStatusCodeValue()).isEqualTo(201);
         Assertions.assertThat(response.getBody()).isNotNull();
     }
