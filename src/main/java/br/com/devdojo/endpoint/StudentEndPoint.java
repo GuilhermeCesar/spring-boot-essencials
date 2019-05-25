@@ -1,8 +1,11 @@
-package br.com.devdojo.endpoint;
+    package br.com.devdojo.endpoint;
 
 import br.com.devdojo.error.ResourceNotFoundException;
 import br.com.devdojo.model.Student;
 import br.com.devdojo.repository.StudentRepository;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,10 @@ public class StudentEndPoint {
     }
 
     @GetMapping("protected/students")
+    @ApiOperation(
+            value = "Return a list with all students ",
+            response = Student[].class
+    )
     public ResponseEntity<?> listAll(Pageable pageable) {
         System.out.println(studentDao.findAll());
         return new ResponseEntity(studentDao.findAll(pageable), HttpStatus.OK);
@@ -41,7 +48,7 @@ public class StudentEndPoint {
         return new ResponseEntity<>(student, HttpStatus.OK);
     }
 
-    @GetMapping(path = "protected/students/findByName/{name}")
+    @GetMapping("protected/students/findByName/{name}")
     public ResponseEntity<?> findStudensByName(@PathVariable String name) {
         return new ResponseEntity<>(this.studentDao.findByNameIgnoreCaseContaining(name), HttpStatus.OK);
     }
